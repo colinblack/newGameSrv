@@ -3,7 +3,7 @@
 
 int main(int argc,char** argv){
 
-	if(!BattleServer::Instance()->Initialize())
+	if(!BattleServer1::Instance()->Initialize())
 	{
 		printf("battle Server Initialize Error\n");
 		return 0;
@@ -14,13 +14,14 @@ int main(int argc,char** argv){
 		return 0;
 	}
 
-	if(!BattleServer::Instance()->InitThread())
+//逻辑线程
+/* 	if(!BattleServer::Instance()->InitThread())
 	{
 		printf("battle Server InitThread Error\n");
 		return 0;
-	}
+	} */
 
-	if(!BattleServer::Instance()->Run())
+	if(!BattleServer1::Instance()->Run())
 	{
 		fatal_log("[FireServer::Run fail]");
 	}

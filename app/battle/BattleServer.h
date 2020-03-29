@@ -41,8 +41,9 @@ class BattleServer1 : public CSingleton<BattleServer1> {
 public:
     bool Run();
     bool Initialize();
-
+	
     BattleServer1();
+
     virtual  ~BattleServer1();
 
 private:

@@ -216,14 +216,17 @@ bool BattleServer1::Initialize() {
         return false;
     }
     //TODO:最大连接数
+	pTcpSvr_->Start(listenAddress);
+	if(!System::InitDaemon())
+	{
+		fatal_log("[System::InitDaemon fail][error=%d]", errno);
+		return false;
+	}
 
-
-
+	return true;
 }
 
 bool BattleServer1::Run() {
-
-    pTcpSvr_->Start(3368, "192.168.1.102");
     loop_->loop();
 
     return true;
