@@ -209,14 +209,18 @@ bool BattleServer1::Initialize() {
         return false;
     }
 
-    vector<CInternetAddress> listenAddress;
+    vector<InetAddr> listenAddress;
     if(!ParseAddress(listenAddress,Config::GetValue("server_listen")))
     {
         fatal_log("[ParseAddress fail]");
         return false;
     }
+    if(listenAddress.empty()){
+        error_log("no ip Address");
+        return false;
+    }
     //TODO:最大连接数
-	pTcpSvr_->Start(listenAddress);
+	pTcpSvr_->Start(listenAddress.front());
 	if(!System::InitDaemon())
 	{
 		fatal_log("[System::InitDaemon fail][error=%d]", errno);
