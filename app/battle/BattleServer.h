@@ -4,6 +4,11 @@
 #include "ServerInc.h"
 #include "TcpServer1.h"
 #include <memory>
+#include "CallBacks.h"
+#include "Timer.h"
+
+using namespace flynet;
+using namespace flynet::net;
 
 class BattleServer : public CTcpServer, public CSingleton<BattleServer>
 {
@@ -45,11 +50,17 @@ public:
     BattleServer1();
 
     virtual  ~BattleServer1();
+	void SetTimerCB(TimerTaskCallBack cb, double after,  double  interval); //设置定时器回调 
 
 private:
-    std::unique_ptr<TcpServer1> pTcpSvr_;
+	bool OnReceive(const  std::shared_ptr<Connect>&,  std::shared_ptr<void>);
+	bool ReceiveData(const  std::shared_ptr<Connect>& , std::shared_ptr<CDynamicBuffer<TCP_CHANNEL_DEFAULT_SIZE>> );
+
+private:
     std::unique_ptr<int> pInt_;
     EventLoop* loop_;
+	Timer*  timer_;
+    std::unique_ptr<TcpServer1<CDynamicBuffer<TCP_CHANNEL_DEFAULT_SIZE>>> pTcpSvr_;
 };
 
 

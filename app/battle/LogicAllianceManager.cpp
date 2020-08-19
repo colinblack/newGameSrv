@@ -66,10 +66,7 @@ int LogicAllianceManager::OnInit()
 {
 	return 0;
 }
-void LogicAllianceManager::OnTimer1()
-{
-	return;
-}
+
 void LogicAllianceManager::OnRaceSettle()
 {
 	map<uint32_t, pair<uint32_t, uint32_t> > rank;

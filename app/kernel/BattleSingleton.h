@@ -19,6 +19,7 @@ public:
 	virtual ~BattleSingleton(){}
 	BattleSingleton(){}
 	virtual int OnInit(){return 0;}
+	virtual int Init(){return 0;}
 	virtual void OnExit(){}
 	virtual void OnTimer1(){}
 	virtual void OnTimer2(){}

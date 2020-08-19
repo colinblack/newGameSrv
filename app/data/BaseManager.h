@@ -23,7 +23,6 @@ public:
 	virtual void CallDestroy() {Destroy();}
 	virtual int OnInit();
 	virtual void OnExit();
-	virtual void OnTimer1();
 	virtual void OnTimer2();
 
 	int CheckBuff(unsigned uid);

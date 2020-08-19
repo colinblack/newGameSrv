@@ -1,5 +1,5 @@
 #include "BattleServer.h"
-
+#include "EventLoop.h"
 
 CBaseMutex   BattleServer::m_mutex;
 pthread_t BattleServer::m_thread;
@@ -7,6 +7,8 @@ pthread_cond_t BattleServer::m_cond;
 list<CFirePacket*> BattleServer::m_recv;
 list<CFirePacket*> BattleServer::m_send;
 set<int> BattleServer::m_closed;
+
+using namespace std::placeholders;
 
 static void OnReloadConfig()
 {
@@ -220,7 +222,10 @@ bool BattleServer1::Initialize() {
         return false;
     }
     //TODO:最大连接数
+    error_log("ip: %s, port: %d", listenAddress.front().ip_.c_str(), listenAddress.front().port_);
 	pTcpSvr_->Start(listenAddress.front());
+	pTcpSvr_->SetMessageCallback(std::bind(&BattleServer1::OnReceive, this,  _1,  _2));
+
 	if(!System::InitDaemon())
 	{
 		fatal_log("[System::InitDaemon fail][error=%d]", errno);
@@ -239,10 +244,84 @@ bool BattleServer1::Run() {
 
 BattleServer1::BattleServer1()
     : loop_(new EventLoop())
-    , pTcpSvr_(new TcpServer1(loop_)){
+	, timer_(new Timer(loop_))
+    , pTcpSvr_(new TcpServer1<CDynamicBuffer<TCP_CHANNEL_DEFAULT_SIZE>>(loop_)){
 }
 
 
 BattleServer1::~BattleServer1(){
     delete loop_;
+}
+
+bool BattleServer1::OnReceive(const  std::shared_ptr<Connect>&  con,  std::shared_ptr<void>  buffer){
+	CFirePacket* packet = new CFirePacket;
+	auto recBuffer = std::static_pointer_cast<CDynamicBuffer<TCP_CHANNEL_DEFAULT_SIZE>>(buffer);
+	ReceiveData(con, recBuffer);
+
+	uint32_t decodeSize = 0;
+
+	do
+	{
+		CFirePacket* packet = new CFirePacket;
+		bool decodeSuccess = packet->Decode(recBuffer.get());
+		///TODO: decode size error auto close
+		decodeSize = packet->GetDecodeSize();
+		if(decodeSize > 0)
+		{
+			if(decodeSuccess)
+			{
+				//debug_log("decode success,bodyLen=%u",packet.bodyLen);
+			//	packet->ChannelId = pChannel->GetChannelId();
+			//	OnReceive(packet);
+				LogicManager::Instance()->process(packet);
+			}
+			else
+			{
+/* 				error_log("[Decode fail][channelId=%d,size=%u,packet=\n%s]",
+						pChannel->GetChannelId(), recBuffer->GetSize(),
+						recBuffer->ToString().c_str()); */
+				error_log("[Decode fail][size=%u,packet=\n%s]",
+						recBuffer->GetSize(),
+						recBuffer->ToString().c_str());
+				delete packet;
+			}
+			recBuffer->Remove(0, decodeSize);
+		}
+		else
+			delete packet;
+	}while(decodeSize > 0);
+
+	return true;
+}
+
+bool BattleServer1::ReceiveData(const  std::shared_ptr<Connect>&  con, std::shared_ptr<CDynamicBuffer<TCP_CHANNEL_DEFAULT_SIZE>> buffer){
+	int byteRecv = 0;
+	int flag = 0;
+	do{
+		byteRecv = buffer->GetFreeCapacity();
+		if(byteRecv <= 0)
+			return true;
+		byteRecv = ::recv(con->GetFd(), buffer->GetNativeBuffer() + buffer->GetSize(), byteRecv, 0);
+		if(byteRecv > 0){
+			buffer->SetSize(buffer->GetSize() + byteRecv);
+		}else if(byteRecv == 0){
+			flag = 1;
+			break;	
+		}else{
+			flag = 2;
+			break;
+		}
+	} while(false);
+	
+	if (flag == 1)
+		error_log("[Receive error] 0");
+	if (flag == 2)
+		error_log("[Receive error][error=%d]", errno);
+		
+	return false;
+}
+
+
+void BattleServer1::SetTimerCB(TimerTaskCallBack cb, double after,  double  interval){
+	timer_->AddTimer(cb, after, interval);
 }

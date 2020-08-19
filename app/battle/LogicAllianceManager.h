@@ -84,7 +84,6 @@ public:
 
 	virtual void CallDestroy() {Destroy();}
 	virtual int OnInit();
-	virtual void OnTimer1();
 	void OnRaceSettle();
 
 	int Online(unsigned uid);

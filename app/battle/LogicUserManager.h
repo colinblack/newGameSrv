@@ -176,7 +176,9 @@ private:
 public:
 	virtual void CallDestroy() { Destroy();}
 
+	int OnInit();
 	void OnTimer1();
+
 	uint32_t OnWatchAdsReward(uint32_t uid, uint32_t propsId);
 	bool FetchWatchAdsReward(uint32_t uid, uint32_t& propsId, uint32_t& count);
 

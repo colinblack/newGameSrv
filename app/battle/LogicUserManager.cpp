@@ -6,6 +6,7 @@
  */
 
 #include "LogicUserManager.h"
+#include "BattleServer.h"
 
 OffUserSaveControl::OffUserSaveControl(unsigned uid):
 		uid_(uid)
@@ -783,6 +784,10 @@ LogicUserManager::LogicUserManager()
 
 	//初始化,用于存储世界频道点赞请求
 	userActId = e_Activity_UserData_1;
+}
+
+int LogicUserManager::OnInit(){
+	BattleServer1::Instance()->SetTimerCB(std::bind(&LogicUserManager::OnTimer1, this), 1.0, 0);
 }
 
 void LogicUserManager::OnTimer1()

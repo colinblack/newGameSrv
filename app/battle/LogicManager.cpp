@@ -5,6 +5,7 @@
 
 #include "ServerInc.h"
 #include "BattleServer.h"
+#include "Util.h"
 
 uint32_t LogicManager::ServerId = 0;
 uint32_t LogicManager::SecOpenTime = 0;
@@ -52,27 +53,32 @@ bool LogicManager::Initialize(){
 	if(base_buff)
 		DataSingletonBase::BASE_BUFF = base_buff;
 
-	BattleServer* pServer = BattleServer::Instance();
+	//BattleServer* pServer = BattleServer::Instance();
 
 	//定时器线程
-	CTcpChannel* pTimeChannel = pServer->GetSelfClientChannel();
+//	CTcpChannel* pTimeChannel = pServer->GetSelfClientChannel();
+	/*
 	pthread_t pid;
 	if(pthread_create(&pid,NULL,TimerThread,(void*)pTimeChannel) != 0){
 		error_log("start time thread failed,%m");
 		return false;
 	}
 	info_log("time thread start,pid=%u",pid);
-
+*/
+	//发包线程　
+	#if  0
 	if(!BattleConnect::InitThread()){
 		error_log("start BattleConnect thread failed,%m");
 		return false;
 	}
+	#endif 
 
 	if(!ConfigManager::Instance()->Inited())
 	{
 		error_log("ConfigManager Init error!");
 		return false;
 	}
+
 	RegProto();
 	RegDataManager();
 	RegMemoryManager();
@@ -80,101 +86,13 @@ bool LogicManager::Initialize(){
 	RegActivityManager();
 
 	int ret = 0;
-	for(vector<DataSingletonBase*>::iterator it=m_dataManager.begin();it!=m_dataManager.end();++it)
-	{
-		try
-		{
-			ret = (*it)->Init();
-			if(ret)
-			{
-				error_log("DataSingleton Init error!");
-				return false;
-			}
-		}
-		catch(const std::exception&)
-		{
-			error_log("DataSingleton Init error!");
-			return false;
-		}
-	}
-	for(vector<DataSingletonBase*>::iterator it=m_memoryManager.begin();it!=m_memoryManager.end();++it)
-	{
-		try
-		{
-			ret = (*it)->Init();
-			if(ret)
-			{
-				error_log("MemorySingleton Init error!");
-				return false;
-			}
-		}
-		catch(const std::exception&)
-		{
-			error_log("MemorySingleton Init error!");
-			return false;
-		}
-	}
-
-	for(vector<DataSingletonBase*>::iterator it=m_dataManager.begin();it!=m_dataManager.end();++it)
-	{
-		try
-		{
-			ret = (*it)->OnInit();
-			if(ret)
-			{
-				error_log("DataSingleton OnInit error!");
-				return false;
-			}
-		}
-		catch(const std::exception&)
-		{
-			error_log("DataSingleton OnInit error!");
-			return false;
-		}
-	}
-	for(vector<DataSingletonBase*>::iterator it=m_memoryManager.begin();it!=m_memoryManager.end();++it)
-	{
-		try
-		{
-			ret = (*it)->OnInit();
-			if(ret)
-			{
-				error_log("MemorySingleton OnInit error!");
-				return false;
-			}
-		}
-		catch(const std::exception&)
-		{
-			error_log("MemorySingleton OnInit error!");
-			return false;
-		}
-	}
-	for(vector<BattleSingleton*>::iterator it=m_battleManager.begin();it!=m_battleManager.end();++it)
-	{
-		try
-		{
-			ret = (*it)->OnInit();
-			if(ret)
-			{
-				error_log("BattleSingleton OnInit error!");
-				return false;
-			}
-		}
-		catch(const std::exception&)
-		{
-			error_log("BattleSingleton OnInit error!");
-			return false;
-		}
-	}
-	for(vector<ActivitySingletonBase*>::iterator it=m_activityManager.begin();it!=m_activityManager.end();++it)
-	{
-		try
-		{
-			(*it)->OnInit();
-		}
-		catch(const std::exception&) {}
-	}
-
+	ObjInit(m_dataManager);
+	ObjInit(m_memoryManager);
+	ObjInit(m_battleManager);
+	ObjInit(m_activityManager);
+	
+	BattleServer1::Instance()->SetTimerCB(std::bind(&LogicManager::onTimer2, this), 3.0, 0);
+	BattleServer1::Instance()->SetTimerCB(std::bind(&LogicManager::timerProcess, this), 1.0, 0);
 	return true;
 }
 
@@ -311,9 +229,6 @@ void LogicManager::process(CFirePacket* packet)
 		break;
 	case PROTOCOL_BOT:
 		botProcess(packet);
-		break;
-	case PROTOCOL_EVENT_SECOND_TIMER:
-		timerProcess(packet);
 		break;
 	case PROTOCOL_EVENT_BATTLE_CONNECT:
 		battleProcess(packet);
@@ -625,7 +540,7 @@ void LogicManager::offline(unsigned uid)
 		LogicXsgReportManager::Instance()->XSGLogOutReport(uid);
 }
 
-void LogicManager::timerProcess(CFirePacket* packet)
+void LogicManager::timerProcess()
 {
 	struct timeval tv;
 	gettimeofday(&tv,NULL);
@@ -753,52 +668,6 @@ void LogicManager::timerProcess(CFirePacket* packet)
 				break;
 		}
 
-		for(vector<BattleSingleton*>::iterator it=m_battleManager.begin();it!=m_battleManager.end();++it)
-		{
-			try
-			{
-				(*it)->OnTimer1();
-			}
-			catch(const std::exception&) {}
-		}
-		for(vector<DataSingletonBase*>::iterator it=m_memoryManager.begin();it!=m_memoryManager.end();++it)
-		{
-			try
-			{
-				(*it)->OnTimer1();
-			}
-			catch(const std::exception&) {}
-		}
-		for(vector<DataSingletonBase*>::iterator it=m_dataManager.begin();it!=m_dataManager.end();++it)
-		{
-			try
-			{
-				(*it)->OnTimer1();
-			}
-			catch(const std::exception&) {}
-		}
-
-		for(vector<DataSingletonBase*>::iterator it=m_memoryManager.begin();it!=m_memoryManager.end();++it)
-		{
-			try
-			{
-				(*it)->Timer1();
-			}
-			catch(const std::exception&) {}
-		}
-		for(vector<DataSingletonBase*>::iterator it=m_dataManager.begin();it!=m_dataManager.end();++it)
-		{
-			try
-			{
-				(*it)->Timer1();
-			}
-			catch(const std::exception&) {}
-		}
-
-		if(m_timer % 3 == 0)
-		{
-			this->onTimer2();
-		}
 	}
 
 	gettimeofday(&tv,NULL);
@@ -2062,3 +1931,30 @@ void LogicManager::CheckSig(){
 	}
 	m_signum = 0;
 }
+
+template<class Type>
+void LogicManager::ObjInit(vector<Type*>& obj){
+	int ret1 = 0;
+	int ret2 = 0;
+	for(auto it=obj.begin();it!=obj.end();++it)
+	{
+		try
+		{
+			if(has_member_Init<Type>::value)
+				ret1 = (*it)->Init();
+			if(has_member_OnInit<Type>::value)
+				ret2 = (*it)->OnInit();
+			if(ret1 || ret2)
+			{
+				error_log("%s Init error!", typeid(*it).name());
+				return;
+			}
+		}
+		catch(const std::exception&)
+		{
+			error_log("%s Init error!", typeid(*it).name());
+			return;
+		}
+	}
+
+} 

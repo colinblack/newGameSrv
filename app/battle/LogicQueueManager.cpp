@@ -1,5 +1,6 @@
 #include "LogicQueueManager.h"
 #include "ServerInc.h"
+#include "BattleServer.h"
 
 //加速。立即完成系列
 void DataRoutineBase::CheckUd(unsigned ud)
@@ -39,6 +40,11 @@ int DataRoutineBase::GetLeftTime()
 	uint32_t now = Time::GetGlobalTime();
 	return (endts_ > now) ? (endts_ - now) : 0;
 }
+
+int LogicQueueManager::OnInit(){
+	BattleServer1::Instance()->SetTimerCB(std::bind(&LogicQueueManager::OnTimer1, this), 1.0, 0);
+}
+
 
 void LogicQueueManager::OnTimer1()
 {

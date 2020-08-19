@@ -56,7 +56,7 @@ link_libraries(sg17pb)
 link_libraries(sg17config)
 link_libraries(sg17kernel)
 link_libraries(sg17data)
-link_libraries(cob)
+link_libraries(flynet)
 add_definitions(-std=c++11)
 
 aux_source_directory(. DIR_LIB_SRCS)

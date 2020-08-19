@@ -56,13 +56,16 @@ public:
 	void CheckSave();
 	void DataLog();
 	void TryClear();
+
+	template<class Type>
+	void ObjInit(vector<Type*>& obj);
 private:
 	void clientProcess(CFirePacket* packet);
 	void deliverProcess(CFirePacket* packet);
 	void adminProcess(CFirePacket* packet);
 	void botProcess(CFirePacket* packet);
 	void heartProcess(CFirePacket* packet);
-	void timerProcess(CFirePacket* packet);
+	void timerProcess();
 	int onTimer2();
 	void preOffline(CFirePacket* packet);
 	void battleProcess(CFirePacket* packet);

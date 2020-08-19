@@ -48,7 +48,7 @@ private:
 
 public:
 	virtual void CallDestroy() { Destroy();}
-
+	int OnInit();
 	void OnTimer1();
 
 	//加速
@@ -72,6 +72,7 @@ public:
 	//任务完成
 	void TaskDone(DataRoutineBase * task);
 	void FinishInstant(uint32_t uid, uint32_t buildType);
+
 private:
 	//加速队列
 	int SpeedUp(unsigned uid, unsigned type, unsigned method,unsigned ud, User::SpeedUpResp * resp);

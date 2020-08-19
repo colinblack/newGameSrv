@@ -17,8 +17,7 @@ int BaseManager::OnInit() {
 }
 void BaseManager::OnExit() {
 }
-void BaseManager::OnTimer1() {
-}
+
 void BaseManager::OnTimer2() {
 }
 

@@ -18,7 +18,8 @@ public:
 	ActivitySingletonBase(){}
 	virtual ~ActivitySingletonBase(){}
 	virtual bool IsOn() = 0;
-	virtual void OnInit() = 0;
+	virtual int OnInit() = 0;
+	virtual int Init(){return 0;}
 	virtual void CheckDay() = 0;
 	virtual void OnReload() = 0;
 	virtual void OnExit() = 0;
@@ -45,7 +46,7 @@ public:
 	{
 		return m_on;
 	}
-	void OnInit()
+	int OnInit()
 	{
 		User::ActivityItem act;
 		if(ConfigManager::Instance()->GetActivity(T, act))
